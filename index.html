@@ -91,7 +91,30 @@ function sum(arr,k='valor'){return (arr||[]).reduce((a,b)=>a+Number(b[k]||0),0)}
 async function init(){
   const local=localStorage.getItem('vitalisDados');
   if(local){dados=JSON.parse(local)}
-  else {try{dados=await (await fetch('dados-financeiros.json?d='+Date.now())).json()}catch(e){dados={dataRelatorio:'2026-04-29',atualizadoEm:'2026-04-29 10:00',moeda:'MT',saldos:[],despesas:[],devedores:[],vendas:{dia:0,diaAnterior:0,totalAteData:0}}}}
+  else {try{const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQUaHKZNpClWM4hFM-RV9A1cDbrS_e4gBSqrrKMErc0DF5ChKce-T_1DU7RiWxw6yb2CmoNisA24Ua0/pub?gid=0&single=true&output=csv");
+const texto = await response.text();
+
+const linhas = texto.split("\n").slice(1);
+
+let saldos = [];
+
+linhas.forEach(linha => {
+  const colunas = linha.split(",");
+
+  saldos.push({
+    conta: colunas[0],
+    saldo: parseFloat(colunas[2])
+  });
+});
+
+dados = {
+  dataRelatorio: new Date().toISOString().split("T")[0],
+  atualizadoEm: new Date().toLocaleString(),
+  saldos: saldos,
+  despesas: [],
+  devedores: [],
+  vendas: {dia:0,diaAnterior:0,totalAteData:0}
+};}catch(e){dados={dataRelatorio:'2026-04-29',atualizadoEm:'2026-04-29 10:00',moeda:'MT',saldos:[],despesas:[],devedores:[],vendas:{dia:0,diaAnterior:0,totalAteData:0}}}}
   document.getElementById('jsonBox').value=JSON.stringify(dados,null,2);
   render();
 }
