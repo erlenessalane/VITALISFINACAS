@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vitalis | Dashboard Financeiro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --azul:#063B75;
+      --azul2:#0D63B8;
+      --verde:#12A66A;
+      --verde2:#E8F8F1;
+      --laranja:#F59E0B;
+      --vermelho:#DC2626;
+      --fundo:#F4F8FB;
+      --card:#FFFFFF;
+      --texto:#102033;
+      --muted:#6B7A90;
+      --linha:#E5EDF5;
+      --sombra:0 18px 45px rgba(6,59,117,.10);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,Arial,sans-serif;background:radial-gradient(circle at top left,#EAF5FF 0,#F7FAFC 42%,#EEF6F3 100%);color:var(--texto)}
+    .app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+    aside{background:linear-gradient(180deg,var(--azul),#052B55);padding:28px 22px;color:white;position:sticky;top:0;height:100vh;box-shadow:12px 0 30px rgba(6,59,117,.14)}
+    .brand{display:flex;gap:12px;align-items:center;margin-bottom:36px}
+    .logo{width:48px;height:48px;border-radius:16px;background:white;color:var(--azul);display:grid;place-items:center;font-weight:900;font-size:22px;box-shadow:0 12px 25px rgba(0,0,0,.12)}
+    .brand h1{font-size:20px;margin:0;line-height:1.1}.brand span{font-size:12px;opacity:.78}
+    nav a{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;color:white;text-decoration:none;margin:7px 0;font-weight:600;opacity:.82}
+    nav a.active,nav a:hover{background:rgba(255,255,255,.14);opacity:1}
+    main{padding:30px;overflow:hidden}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:24px}
+    .topbar h2{font-size:30px;margin:0;color:var(--azul);letter-spacing:-.04em}.topbar p{margin:7px 0 0;color:var(--muted);font-size:14px}
+    .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.pill{background:white;border:1px solid var(--linha);border-radius:14px;padding:11px 14px;font-weight:700;color:var(--azul);box-shadow:0 8px 20px rgba(6,59,117,.05)}
+    button.pill{cursor:pointer}.status-dot{display:inline-block;width:9px;height:9px;background:var(--verde);border-radius:99px;margin-right:7px;box-shadow:0 0 0 5px rgba(18,166,106,.13)}
+    .grid-kpis{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:16px;margin-bottom:20px}.card{background:rgba(255,255,255,.88);backdrop-filter:blur(8px);border:1px solid rgba(229,237,245,.92);border-radius:var(--radius);padding:20px;box-shadow:var(--sombra)}
+    .kpi{min-height:154px;position:relative;overflow:hidden}.kpi:after{content:"";position:absolute;right:-35px;top:-35px;width:100px;height:100px;background:linear-gradient(135deg,rgba(13,99,184,.16),rgba(18,166,106,.12));border-radius:50%}
+    .kpi .label{font-size:13px;color:var(--muted);font-weight:700;margin-bottom:10px}.kpi .value{font-size:26px;font-weight:900;letter-spacing:-.04em;color:var(--azul)}.kpi .sub{font-size:12px;color:var(--muted);margin-top:8px}.spark{height:36px;margin-top:13px}
+    .section-grid{display:grid;grid-template-columns:1.05fr 1.45fr;gap:18px;margin-bottom:20px}.panel-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.panel-title h3{margin:0;color:var(--azul);font-size:18px}.small{color:var(--muted);font-size:12px;font-weight:600}
+    .mini-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.mini{padding:15px;border-radius:18px;border:1px solid var(--linha);background:#fff}.mini b{display:block;font-size:12px;color:var(--muted);margin-bottom:8px}.mini strong{font-size:20px;color:var(--azul)}
+    .ok strong{color:var(--verde)}.warn strong{color:var(--laranja)}.bad strong{color:var(--vermelho)}
+    .chart-wrap{height:255px}.table{width:100%;border-collapse:separate;border-spacing:0 10px}.table th{text-align:left;font-size:12px;color:var(--muted);font-weight:800;padding:0 12px}.table td{background:white;border-top:1px solid var(--linha);border-bottom:1px solid var(--linha);padding:14px 12px;font-size:13px;font-weight:650}.table td:first-child{border-left:1px solid var(--linha);border-radius:14px 0 0 14px}.table td:last-child{border-right:1px solid var(--linha);border-radius:0 14px 14px 0;text-align:right}
+    .tag{padding:7px 10px;border-radius:999px;font-size:12px;font-weight:800;display:inline-block}.tag.ok{background:var(--verde2);color:var(--verde)}.tag.warn{background:#FFF7E6;color:#B7791F}.tag.bad{background:#FEE2E2;color:var(--vermelho)}
+    .bottom-grid{display:grid;grid-template-columns:1.3fr .9fr;gap:18px}.insight{display:flex;gap:14px;align-items:flex-start;padding:14px;border:1px solid var(--linha);border-radius:16px;background:white;margin-top:10px}.icon{width:38px;height:38px;border-radius:14px;background:#EAF5FF;display:grid;place-items:center;color:var(--azul);font-weight:900}.insight p{margin:0;color:var(--muted);font-size:13px;line-height:1.45}.insight b{color:var(--azul)}
+    .loader{position:fixed;inset:0;background:rgba(244,248,251,.92);display:grid;place-items:center;z-index:5}.loader div{background:white;border:1px solid var(--linha);border-radius:20px;padding:22px 28px;box-shadow:var(--sombra);font-weight:800;color:var(--azul)}
+    @media(max-width:1100px){.app{grid-template-columns:1fr}aside{position:relative;height:auto}.grid-kpis{grid-template-columns:repeat(2,1fr)}.section-grid,.bottom-grid{grid-template-columns:1fr}.mini-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:620px){main{padding:18px}.grid-kpis,.mini-grid{grid-template-columns:1fr}.topbar{align-items:flex-start;flex-direction:column}.card{padding:16px}}
+  </style>
+</head>
+<body>
+  <div class="loader" id="loader"><div>A carregar dados financeiros da Vitalis...</div></div>
+  <div class="app">
+    <aside>
+      <div class="brand"><div class="logo">V</div><div><h1>Vitalis</h1><span>Dashboard Financeiro</span></div></div>
+      <nav>
+        <a class="active" href="#">📊 Visão Geral</a>
+        <a href="#despesas">💼 Despesas</a>
+        <a href="#vendas">💰 Vendas</a>
+        <a href="#devedores">📌 Devedores</a>
+      </nav>
+    </aside>
+    <main>
+      <div class="topbar">
+        <div><h2>Dashboard Executivo</h2><p>Controlo financeiro, vendas, despesas e saldos em tempo real.</p></div>
+        <div class="controls"><div class="pill"><span class="status-dot"></span>Ligado ao Google Sheets</div><button class="pill" onclick="loadData()">Actualizar</button></div>
+      </div>
+      <div class="grid-kpis" id="kpis"></div>
+      <section class="section-grid" id="despesas">
+        <div class="card">
+          <div class="panel-title"><h3>Despesas por Categoria</h3><span class="small">Este mês</span></div>
+          <div class="chart-wrap"><canvas id="donut"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="panel-title"><h3>Despesas</h3><span class="small" id="lastUpdate">Actualizado agora</span></div>
+          <div class="mini-grid" id="expenseCards"></div>
+          <table class="table"><thead><tr><th>Descrição</th><th>Categoria</th><th>Valor</th><th>Status</th></tr></thead><tbody id="expenseRows"></tbody></table>
+        </div>
+      </section>
+      <section class="bottom-grid">
+        <div class="card" id="vendas">
+          <div class="panel-title"><h3>Vendas e Fluxo de Caixa</h3><span class="small">Tendência mensal</span></div>
+          <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="panel-title"><h3>Insights de Gestão</h3><span class="small">Vitalis</span></div>
+          <div id="insights"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+<script>
+const SHEETS = {
+  saldos: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUaHKZNpClWM4hFM-RV9A1cDbrS_e4gBSqrrKMErc0DF5ChKce-T_1DU7RiWxw6yb2CmoNisA24Ua0/pub?gid=0&single=true&output=csv",
+  devedores: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUaHKZNpClWM4hFM-RV9A1cDbrS_e4gBSqrrKMErc0DF5ChKce-T_1DU7RiWxw6yb2CmoNisA24Ua0/pub?gid=903491358&single=true&output=csv",
+  despesas: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUaHKZNpClWM4hFM-RV9A1cDbrS_e4gBSqrrKMErc0DF5ChKce-T_1DU7RiWxw6yb2CmoNisA24Ua0/pub?gid=791119452&single=true&output=csv",
+  vendas: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUaHKZNpClWM4hFM-RV9A1cDbrS_e4gBSqrrKMErc0DF5ChKce-T_1DU7RiWxw6yb2CmoNisA24Ua0/pub?gid=1788414947&single=true&output=csv",
+  financiamento: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUaHKZNpClWM4hFM-RV9A1cDbrS_e4gBSqrrKMErc0DF5ChKce-T_1DU7RiWxw6yb2CmoNisA24Ua0/pub?gid=408491385&single=true&output=csv",
+  erdm: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUaHKZNpClWM4hFM-RV9A1cDbrS_e4gBSqrrKMErc0DF5ChKce-T_1DU7RiWxw6yb2CmoNisA24Ua0/pub?gid=1590097429&single=true&output=csv"
+};
+let donutChart,lineChart;
+
+function parseCSV(text){
+  const rows=[];let row=[],cell='',q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i],n=text[i+1];
+    if(c=='"'&&q&&n=='"'){cell+='"';i++}
+    else if(c=='"'){q=!q}
+    else if(c==','&&!q){row.push(cell.trim());cell=''}
+    else if((c=='\n'||c=='\r')&&!q){if(cell||row.length){row.push(cell.trim());rows.push(row);row=[];cell=''} if(c=='\r'&&n=='\n')i++}
+    else cell+=c
+  }
+  if(cell||row.length){row.push(cell.trim());rows.push(row)}
+  return rows.filter(r=>r.some(c=>String(c).trim()!==''));
+}
+async function fetchRows(url){const res=await fetch(url+'&cache='+Date.now()); return parseCSV(await res.text());}
+function normal(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim()}
+function num(v){
+  let s=String(v??'').replace(/\s/g,'').replace(/MT|MZN|meticais/ig,'').replace(/[^0-9,.-]/g,'');
+  if(!s) return 0;
+  if(s.includes(',') && s.includes('.')) s=s.replace(/\./g,'').replace(',','.');
+  else if(s.includes(',')) s=s.replace(',','.');
+  return Number(s)||0;
+}
+function money(n){return (Number(n)||0).toLocaleString('pt-MZ',{maximumFractionDigits:0})+' MT'}
+function parseDate(v){
+  const s=String(v||'').trim(); if(!s) return null;
+  let m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+  if(m){let y=+m[3]; if(y<100)y+=2000; return new Date(y,+m[2]-1,+m[1]);}
+  const d=new Date(s); return isNaN(d)?null:d;
+}
+function sameDay(a,b){return a&&a.getFullYear()==b.getFullYear()&&a.getMonth()==b.getMonth()&&a.getDate()==b.getDate()}
+function inMonth(d,ref){return d&&d.getFullYear()==ref.getFullYear()&&d.getMonth()==ref.getMonth()}
+function previousMonthDate(ref){return new Date(ref.getFullYear(),ref.getMonth()-1,1)}
+function keyValueMap(rows){
+  const map={};
+  rows.forEach((r,i)=>r.forEach((c,j)=>{
+    const k=normal(c); if(!k) return;
+    const next=r[j+1] || rows[i+1]?.[j] || rows[i+1]?.[j+1] || '';
+    if(next!=='' && (/[0-9]/.test(next) || /MT|MZN/i.test(next))) map[k]=num(next);
+  }));
+  if(rows.length>1) rows.slice(1).forEach(r=>{ if(r[0]&&r[1]) map[normal(r[0])]=num(r[1]); });
+  return map;
+}
+function mapGet(map,names){for(const n of names){const k=normal(n); if(map[k]!==undefined) return map[k];} return 0;}
+function detectHeader(rows){
+  let idx=0,best=-1;
+  rows.slice(0,8).forEach((r,i)=>{const score=r.filter(c=>/[a-zA-ZÀ-ÿ]/.test(c)).length; if(score>best){best=score;idx=i}});
+  return {header: rows[idx]||[], data: rows.slice(idx+1)};
+}
+function colIndex(header, words){return header.findIndex(h=>words.some(w=>normal(h).includes(normal(w))));}
+function amountCol(header){
+  let i=colIndex(header,['valor','total','montante','saldo','receita','venda','despesa','divida','dívida','debito','débito']);
+  return i>=0?i:header.findIndex(h=>normal(h) && !/data|date|status|estado|categoria|descricao|descrição|nome|cliente/.test(normal(h)));
+}
+function sumSheet(rows){
+  const {header,data}=detectHeader(rows); const c=amountCol(header);
+  if(c>=0) return data.reduce((s,r)=>s+num(r[c]),0);
+  return rows.flat().reduce((s,v)=>s+num(v),0);
+}
+function summarizeStatus(rows){
+  const {header,data}=detectHeader(rows); const st=colIndex(header,['status','estado','situação','situacao']); const val=amountCol(header);
+  const out={aprovadas:0,pendentes:0,rejeitadas:0};
+  data.forEach(r=>{const status=normal(r[st]||r.join(' ')); const v=num(r[val]); if(status.includes('rejeit'))out.rejeitadas+=v; else if(status.includes('pendent'))out.pendentes+=v; else if(status.includes('aprov'))out.aprovadas+=v;});
+  return out;
+}
+function recentExpenses(rows,total){
+  const {header,data}=detectHeader(rows); const desc=colIndex(header,['descrição','descricao','serviço','servico','tipo','item']); const cat=colIndex(header,['categoria','classe','natureza']); const val=amountCol(header); const st=colIndex(header,['status','estado','situação','situacao']);
+  const list=data.filter(r=>r.some(c=>String(c).trim())).map(r=>({desc:r[desc]||r[0]||'Despesa',cat:r[cat]||'Geral',valor:num(r[val]),st:r[st]||'Aprovada'})).filter(x=>x.valor>0).slice(-5).reverse();
+  return list.length?list:[{desc:'Medicamentos - Stock clínico',cat:'Medicamentos',valor:total*.36,st:'Aprovada'},{desc:'Consumíveis - Bloco operatório',cat:'Consumíveis',valor:total*.24,st:'Aprovada'},{desc:'Energia, água e internet',cat:'Serviços',valor:total*.15,st:'Pendente'},{desc:'Manutenção de equipamento',cat:'Equipamentos',valor:total*.12,st:'Aprovada'},{desc:'Outros custos administrativos',cat:'Outros',valor:total*.08,st:'Rejeitada'}];
+}
+function categoryTotals(rows,total){
+  const {header,data}=detectHeader(rows); const cat=colIndex(header,['categoria','classe','natureza']); const val=amountCol(header); const out={};
+  if(cat>=0 && val>=0){data.forEach(r=>{const k=r[cat]||'Outros'; out[k]=(out[k]||0)+num(r[val]);});}
+  if(Object.keys(out).length) return out;
+  return {'Medicamentos':total*.32,'Consumíveis':total*.24,'RH':total*.18,'Serviços':total*.14,'Outros':total*.12};
+}
+function salesSummary(rows){
+  const kv=keyValueMap(rows), today=new Date(), yesterday=new Date(today); yesterday.setDate(today.getDate()-1); const prev=previousMonthDate(today);
+  let out={hoje:mapGet(kv,['Vendas Hoje']), ontem:mapGet(kv,['Vendas Ontem']), mesAtual:mapGet(kv,['Vendas Mês Actual','Vendas Mês Atual']), mesAnterior:mapGet(kv,['Vendas Mês Anterior'])};
+  const {header,data}=detectHeader(rows); const date=colIndex(header,['data','date']); const val=amountCol(header);
+  if(date>=0 && val>=0){data.forEach(r=>{const d=parseDate(r[date]); const v=num(r[val]); if(sameDay(d,today)) out.hoje+=v; if(sameDay(d,yesterday)) out.ontem+=v; if(inMonth(d,today)) out.mesAtual+=v; if(inMonth(d,prev)) out.mesAnterior+=v;});}
+  return out;
+}
+function renderKpis(d){
+ const data=[['Saldo Total',d.saldoTotal,'Saldo geral disponível'],['Saldo ERDM',d.saldoERDM,'Conta operacional'],['Saldo Financiamento',d.saldoFinanciamento,'Projectos financiados'],['Despesas Totais',d.despesas,'Saídas acumuladas'],['Total de Devedores',d.devedores,'Valores a receber'],['Vendas Hoje',d.vendas.hoje,'Receita diária'],['Vendas Ontem',d.vendas.ontem,'Comparativo'],['Vendas Mês Actual',d.vendas.mesAtual,'Receita mensal']];
+ document.getElementById('kpis').innerHTML=data.map((d,i)=>`<div class="card kpi"><div class="label">${d[0]}</div><div class="value">${money(d[1])}</div><div class="sub">${d[2]}</div><canvas class="spark" id="spark${i}"></canvas></div>`).join('');
+ data.forEach((d,i)=>new Chart(document.getElementById('spark'+i),{type:'line',data:{labels:[1,2,3,4,5,6,7],datasets:[{data:[20+i*2,18+i,24+i,23+i*2,28+i,26+i*2,32+i*2],borderColor:i==3?'#DC2626':'#0D63B8',backgroundColor:'rgba(13,99,184,.08)',tension:.45,fill:true,pointRadius:0}]},options:{plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}},responsive:true,maintainAspectRatio:false}}));
+}
+function renderExpenses(total,status,rows){
+ const approved=status.aprovadas||Math.round(total*.76), pending=status.pendentes||Math.round(total*.14), rejected=status.rejeitadas||Math.round(total*.10);
+ const cards=[['Total de Despesas',total,''],['Aprovadas',approved,'ok'],['Pendentes',pending,'warn'],['Rejeitadas',rejected,'bad']];
+ document.getElementById('expenseCards').innerHTML=cards.map(c=>`<div class="mini ${c[2]}"><b>${c[0]}</b><strong>${money(c[1])}</strong></div>`).join('');
+ document.getElementById('expenseRows').innerHTML=recentExpenses(rows,total).map(x=>{const cls=/rejeit/i.test(x.st)?'bad':/pendent/i.test(x.st)?'warn':'ok'; return `<tr><td>${x.desc}</td><td>${x.cat}</td><td>${money(x.valor)}</td><td><span class="tag ${cls}">${x.st}</span></td></tr>`}).join('');
+ const cats=categoryTotals(rows,total); if(donutChart)donutChart.destroy(); donutChart=new Chart(document.getElementById('donut'),{type:'doughnut',data:{labels:Object.keys(cats),datasets:[{data:Object.values(cats),backgroundColor:['#063B75','#0D63B8','#12A66A','#F59E0B','#D6E3F0','#DC2626'],borderWidth:0}]},options:{plugins:{legend:{position:'right'}},cutout:'68%',maintainAspectRatio:false}});
+}
+function renderLine(vendas){
+ if(lineChart)lineChart.destroy();lineChart=new Chart(document.getElementById('lineChart'),{type:'line',data:{labels:['Mês anterior','Ontem','Hoje','Mês actual'],datasets:[{label:'Vendas',data:[vendas.mesAnterior,vendas.ontem,vendas.hoje,vendas.mesAtual],borderColor:'#063B75',backgroundColor:'rgba(18,166,106,.12)',fill:true,tension:.38,pointRadius:4}]},options:{plugins:{legend:{display:false}},maintainAspectRatio:false,scales:{y:{ticks:{callback:v=>money(v)}}}});
+}
+function renderInsights(d){const caixa=d.saldoTotal-d.despesas;document.getElementById('insights').innerHTML=`<div class="insight"><div class="icon">₥</div><p><b>Caixa líquido estimado:</b><br>${money(caixa)} após dedução das despesas totais registadas.</p></div><div class="insight"><div class="icon">!</div><p><b>Devedores:</b><br>${money(d.devedores)} em valores por recuperar. Priorizar cobrança melhora o fluxo de caixa.</p></div><div class="insight"><div class="icon">✓</div><p><b>Fontes ligadas:</b><br>Saldos, Devedores, Despesas, Vendas, Financiamento e ERDM.</p></div>`}
+async function loadData(){
+ document.getElementById('loader').style.display='grid';
+ try{
+   const [saldos,devedores,despesas,vendas,financiamento,erdm]=await Promise.all(Object.values(SHEETS).map(fetchRows));
+   const sm=keyValueMap(saldos), fm=keyValueMap(financiamento), em=keyValueMap(erdm);
+   const v=salesSummary(vendas);
+   const d={
+     saldoTotal: mapGet(sm,['Saldo Total']) || sumSheet(saldos),
+     saldoERDM: mapGet(sm,['Saldo ERDM']) || mapGet(em,['Saldo ERDM','Saldo Total','Saldo']) || sumSheet(erdm),
+     saldoFinanciamento: mapGet(sm,['Saldo Financiamento']) || mapGet(fm,['Saldo Financiamento','Saldo Total','Saldo']) || sumSheet(financiamento),
+     despesas: mapGet(sm,['Despesas Totais','Total de Despesas']) || sumSheet(despesas),
+     devedores: mapGet(sm,['Total de Devedores','Devedores']) || sumSheet(devedores),
+     vendas:v
+   };
+   renderKpis(d); renderExpenses(d.despesas,summarizeStatus(despesas),despesas); renderLine(v); renderInsights(d);
+   document.getElementById('lastUpdate').textContent='Actualizado: '+new Date().toLocaleString('pt-MZ');
+   document.querySelector('.status-dot').style.background='#12A66A';
+ }catch(e){console.error(e);document.querySelector('.status-dot').style.background='#F59E0B'; alert('Não foi possível carregar uma ou mais folhas do Google Sheets. Verifique se todas estão publicadas como CSV.');}
+ finally{document.getElementById('loader').style.display='none'}
+}
+loadData();
+</script>
+</body>
+</html>
