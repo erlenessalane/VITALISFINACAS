@@ -89,34 +89,68 @@ function sair(){location.reload()}
 function fmt(v){return Number(v||0).toLocaleString('pt-MZ',{minimumFractionDigits:2,maximumFractionDigits:2})+' MT'}
 function sum(arr,k='valor'){return (arr||[]).reduce((a,b)=>a+Number(b[k]||0),0)}
 async function init(){
-  const local=localStorage.getItem('vitalisDados');
-  if(local){dados=JSON.parse(local)}
-  else {try{const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQUaHKZNpClWM4hFM-RV9A1cDbrS_e4gBSqrrKMErc0DF5ChKce-T_1DU7RiWxw6yb2CmoNisA24Ua0/pub?gid=0&single=true&output=csv");
-const texto = await response.text();
+  try {
+    const LINK_SALDOS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUaHKZNpClWM4hFM-RV9A1cDbrS_e4gBSqrrKMErc0DF5ChKce-T_1DU7RiWxw6yb2CmoNisA24Ua0/pub?gid=0&single=true&output=csv";
+    const LINK_DESPESAS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUaHKZNpClWM4hFM-RV9A1cDbrS_e4gBSqrrKMErc0DF5ChKce-T_1DU7RiWxw6yb2CmoNisA24Ua0/pub?gid=791119452&single=true&output=csv";
+    const LINK_DEVEDORES = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUaHKZNpClWM4hFM-RV9A1cDbrS_e4gBSqrrKMErc0DF5ChKce-T_1DU7RiWxw6yb2CmoNisA24Ua0/pub?gid=903491358&single=true&output=csv";
+    const LINK_VENDAS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUaHKZNpClWM4hFM-RV9A1cDbrS_e4gBSqrrKMErc0DF5ChKce-T_1DU7RiWxw6yb2CmoNisA24Ua0/pub?gid=1788414947&single=true&output=csv";
 
-const linhas = texto.split("\n").slice(1);
+    const limparNumero = (v) => Number(String(v || "0").replace(/[^\d.-]/g, ""));
 
-let saldos = [];
+    const lerCSV = async (url) => {
+      const res = await fetch(url + "&cache=" + Date.now());
+      const txt = await res.text();
 
-linhas.forEach(linha => {
-  const colunas = linha.split(",");
+      return txt.trim().split("\n").slice(1).map(linha => {
+        return linha
+          .match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)
+          ?.map(c => c.replace(/^"|"$/g, "").trim()) || [];
+      });
+    };
 
-  saldos.push({
-    conta: colunas[0],
-    saldo: parseFloat(colunas[2])
-  });
-});
+    const [saldosCSV, despesasCSV, devedoresCSV, vendasCSV] = await Promise.all([
+      lerCSV(LINK_SALDOS),
+      lerCSV(LINK_DESPESAS),
+      lerCSV(LINK_DEVEDORES),
+      lerCSV(LINK_VENDAS)
+    ]);
 
-dados = {
-  dataRelatorio: new Date().toISOString().split("T")[0],
-  atualizadoEm: new Date().toLocaleString(),
-  saldos: saldos,
-  despesas: [],
-  devedores: [],
-  vendas: {dia:0,diaAnterior:0,totalAteData:0}
-};}catch(e){dados={dataRelatorio:'2026-04-29',atualizadoEm:'2026-04-29 10:00',moeda:'MT',saldos:[],despesas:[],devedores:[],vendas:{dia:0,diaAnterior:0,totalAteData:0}}}}
-  document.getElementById('jsonBox').value=JSON.stringify(dados,null,2);
-  render();
+    dados = {
+      dataRelatorio: new Date().toISOString().split("T")[0],
+      atualizadoEm: new Date().toLocaleString("pt-MZ"),
+      moeda: "MT",
+
+      saldos: saldosCSV.map(l => ({
+        conta: l[0],
+        categoria: l[1],
+        saldo: limparNumero(l[2])
+      })),
+
+      despesas: despesasCSV.map(l => ({
+        categoria: l[0],
+        valor: limparNumero(l[1])
+      })),
+
+      devedores: devedoresCSV.map(l => ({
+        cliente: l[0],
+        valor: limparNumero(l[1]),
+        diasAtraso: limparNumero(l[2])
+      })),
+
+      vendas: {
+        dia: limparNumero(vendasCSV[0]?.[1]),
+        diaAnterior: limparNumero(vendasCSV[1]?.[1]),
+        totalAteData: limparNumero(vendasCSV[2]?.[1])
+      }
+    };
+
+    document.getElementById("jsonBox").value = JSON.stringify(dados, null, 2);
+    render();
+
+  } catch(e) {
+    alert("Erro ao carregar dados do Google Sheets.");
+    console.error(e);
+  }
 }
 function render(){
   const saldos=sum(dados.saldos||[],'saldo'), despesas=sum(dados.despesas||[],'valor'), devedores=sum(dados.devedores||[],'valor');
