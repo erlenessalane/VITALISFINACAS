@@ -1,0 +1,34 @@
+{
+  "dataRelatorio": "2026-04-29",
+  "atualizadoEm": "2026-04-29 10:00",
+  "moeda": "MT",
+  "saldos": [
+    { "conta": "Caixa", "saldo": 245780 },
+    { "conta": "BCI", "saldo": 1286340 },
+    { "conta": "Millennium BIM", "saldo": 275000 },
+    { "conta": "Moza Banco", "saldo": 0 },
+    { "conta": "Fornecedores a Pagar", "saldo": -845120 },
+    { "conta": "Salários a Pagar", "saldo": -125600 },
+    { "conta": "Impostos a Pagar", "saldo": -235450 },
+    { "conta": "Outras Contas a Lançar", "saldo": 1855900 }
+  ],
+  "despesas": [
+    { "categoria": "Pessoal", "valor": 622500 },
+    { "categoria": "Medicamentos", "valor": 283900 },
+    { "categoria": "Materiais", "valor": 145000 },
+    { "categoria": "Serviços Médicos", "valor": 118160 },
+    { "categoria": "Outras", "valor": 115000 }
+  ],
+  "devedores": [
+    { "cliente": "Seguro Saúde, SA", "valor": 980450, "diasAtraso": 45 },
+    { "cliente": "Mediplan", "valor": 745300, "diasAtraso": 32 },
+    { "cliente": "Fidelidade Seguros", "valor": 620000, "diasAtraso": 68 },
+    { "cliente": "Sanlam Saúde", "valor": 510750, "diasAtraso": 28 },
+    { "cliente": "Outros Clientes", "valor": 826400, "diasAtraso": 15 }
+  ],
+  "vendas": {
+    "dia": 145780,
+    "diaAnterior": 129550,
+    "totalAteData": 4862340
+  }
+}
